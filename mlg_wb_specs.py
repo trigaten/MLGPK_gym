@@ -5,6 +5,8 @@ from minerl.herobraine.hero.mc import MS_PER_STEP, STEPS_PER_MS
 from minerl.herobraine.hero.handler import Handler
 from typing import List
 
+from minerl.herobraine.hero.mc import ALL_ITEMS
+
 import minerl.herobraine.hero.handlers as handlers
 
 __author__ = "Sander Schulhoff"
@@ -29,8 +31,8 @@ class MLGWB(SimpleEmbodimentEnvSpec):
         return [
             handlers.FlatWorldGenerator(generatorString="1;7,2x3,2;1"),
             handlers.DrawingDecorator("""
-                <DrawCuboid x1="2" y1="5" z1="2" x2="2" y2="5" z2="2" type="gold_block"/>
-                <DrawCuboid x1="-2" y1="9" z1="-2" x2="2" y2="9" z2="2" type="obsidian"/>
+                <DrawCuboid x1="5" y1="5" z1="2" x2="5" y2="5" z2="2" type="gold_block"/>
+                <DrawCuboid x1="-2" y1="88" z1="-2" x2="2" y2="88" z2="2" type="obsidian"/>
             """)
         ]
 
@@ -39,7 +41,7 @@ class MLGWB(SimpleEmbodimentEnvSpec):
             handlers.SimpleInventoryAgentStart([
                 dict(type="water_bucket", quantity=1)
             ]),
-            handlers.AgentStartPlacement(0, 10, 0, 0, 0)
+            handlers.AgentStartPlacement(0, 90, 0, 0, 0)
         ]
 
     def create_rewardables(self) -> List[Handler]:
@@ -60,16 +62,27 @@ class MLGWB(SimpleEmbodimentEnvSpec):
     def create_actionables(self) -> List[Handler]:
         return super().create_actionables() + [
             # allow agent to place water
-            handlers.PlaceBlock("water_bucket"),
-            ]
+            handlers.PlaceBlock(['none', 'water_bucket'],
+                                _other='none', _default='none')
 
-    def create_server_decorators(self) -> List[Handler]:
-        return []
+        ]
+
+    def create_observables(self) -> List[Handler]:
+        return super().create_observables() + [
+            # A compass observation which returns angle and distance information
+            handlers.CompassObservation(True, True),
+        ]
     
     def create_server_initial_conditions(self) -> List[Handler]:
-        return []
+        return [
+            # Sets time to morning and stops passing of time
+            handlers.TimeInitialCondition(False, 23000)
+        ]
 
     def create_server_quit_producers(self):
+        return []
+    
+    def create_server_decorators(self) -> List[Handler]:
         return []
 
     def determine_success_from_rewards(self, rewards: list) -> bool:
@@ -79,4 +92,4 @@ class MLGWB(SimpleEmbodimentEnvSpec):
         return folder == 'mlgwb'
 
     def get_docstring(self):
-        return MLGWB
+        return MLGWB_DOC
