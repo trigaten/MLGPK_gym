@@ -1,19 +1,15 @@
 """MLG Water Bucket Gym"""
 
 from minerl.herobraine.env_specs.simple_embodiment import SimpleEmbodimentEnvSpec
-from minerl.herobraine.hero.mc import MS_PER_STEP, STEPS_PER_MS
 from minerl.herobraine.hero.handler import Handler
-from typing import List
-
-from minerl.herobraine.hero.mc import ALL_ITEMS
-
 import minerl.herobraine.hero.handlers as handlers
+from typing import List
 
 __author__ = "Sander Schulhoff"
 __email__ = "sanderschulhoff@gmail.com"
 
 MLGWB_DOC = """
-In MLG Water Bucket, an agent must learn to perform an "MLG Water Bucket"
+In MLG Water Bucket, an agent must perform an "MLG Water Bucket" jump
 """
 
 MLGWB_LENGTH = 8000
@@ -30,47 +26,56 @@ class MLGWB(SimpleEmbodimentEnvSpec):
     def create_server_world_generators(self) -> List[Handler]:
         return [
             handlers.FlatWorldGenerator(generatorString="1;7,2x3,2;1"),
+            # generate a 3x3 square of obsidian high in the air and a gold block
+            # somewhere below it on the ground
             handlers.DrawingDecorator("""
-                <DrawCuboid x1="5" y1="5" z1="2" x2="5" y2="5" z2="2" type="gold_block"/>
+                <DrawCuboid x1="0" y1="5" z1="-6" x2="0" y2="5" z2="-6" type="gold_block"/>
                 <DrawCuboid x1="-2" y1="88" z1="-2" x2="2" y2="88" z2="2" type="obsidian"/>
             """)
         ]
 
     def create_agent_start(self) -> List[Handler]:
         return [
+            # make the agent start with these items
             handlers.SimpleInventoryAgentStart([
-                dict(type="water_bucket", quantity=1)
+                dict(type="water_bucket", quantity=1), 
+                dict(type="diamond_pickaxe", quantity=1)
             ]),
+            # make the agent start 90 blocks high in the air
             handlers.AgentStartPlacement(0, 90, 0, 0, 0)
         ]
 
     def create_rewardables(self) -> List[Handler]:
         return [
+            # reward the agent for touching a gold block (but only once)
             handlers.RewardForTouchingBlockType([
-                {'type':'gold_block', 'behaviour':'onceOnly', 'reward':'100'},
-            ])
+                {'type':'gold_block', 'behaviour':'onceOnly', 'reward':'50'},
+            ]),
+            handlers.RewardForMissionEnd(50)
         ]
 
     def create_agent_handlers(self) -> List[Handler]:
         return [
-            handlers.AgentQuitFromTouchingBlockType([
-                "gold_block"
+            # make the agent quit when it gets a gold block in its inventory
+            handlers.AgentQuitFromPossessingItem([
+                dict(type="gold_block", amount=1)
             ])
         ]
-    
     
     def create_actionables(self) -> List[Handler]:
         return super().create_actionables() + [
             # allow agent to place water
-            handlers.PlaceBlock(['none', 'water_bucket'],
-                                _other='none', _default='none')
-
+            handlers.KeybasedCommandAction("use"),
+            # also allow it to equip the pickaxe
+            handlers.EquipAction(["diamond_pickaxe"])
         ]
 
     def create_observables(self) -> List[Handler]:
         return super().create_observables() + [
-            # A compass observation which returns angle and distance information
-            handlers.CompassObservation(True, True),
+            # current location and lifestats are returned as additional
+            # observations
+            handlers.ObservationFromCurrentLocation(),
+            handlers.ObservationFromLifeStats()
         ]
     
     def create_server_initial_conditions(self) -> List[Handler]:
@@ -85,6 +90,7 @@ class MLGWB(SimpleEmbodimentEnvSpec):
     def create_server_decorators(self) -> List[Handler]:
         return []
 
+    # the episode can terminate when this is True
     def determine_success_from_rewards(self, rewards: list) -> bool:
         return sum(rewards) >= self.reward_threshold
 
