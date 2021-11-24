@@ -51,7 +51,7 @@ class MLGWB(SimpleEmbodimentEnvSpec):
             handlers.RewardForTouchingBlockType([
                 {'type':'gold_block', 'behaviour':'onceOnly', 'reward':'50'},
             ]),
-            handlers.RewardForMissionEnd(50)
+           handlers.RewardForMissionEnd(50)
         ]
 
     def create_agent_handlers(self) -> List[Handler]:
