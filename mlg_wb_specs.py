@@ -1,15 +1,16 @@
 """MLG Water Bucket Gym"""
 
+__author__ = "Sander Schulhoff"
+__email__ = "sanderschulhoff@gmail.com"
+
 from minerl.herobraine.env_specs.simple_embodiment import SimpleEmbodimentEnvSpec
 from minerl.herobraine.hero.handler import Handler
 import minerl.herobraine.hero.handlers as handlers
 from typing import List
 
-__author__ = "Sander Schulhoff"
-__email__ = "sanderschulhoff@gmail.com"
-
 MLGWB_DOC = """
-In MLG Water Bucket, an agent must perform an "MLG Water Bucket" jump
+In MLG Water Bucket, an agent must perform an "MLG Water Bucket" jump onto a gold block. 
+Then the agent mines the block to terminate the episode.
 """
 
 MLGWB_LENGTH = 8000
